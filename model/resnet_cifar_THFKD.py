@@ -136,11 +136,13 @@ class ResNet(nn.Module):
             setattr(self, 'layer3_' + str(i), self._make_layer(block,  num_filters[3], n, stride=2))
             self.inplanes = fix_inplanes
             setattr(self, 'classifier3_' + str(i), nn.Linear(num_filters[3] * block.expansion, num_classes))
-
+            
+        # Auxiliary blocks
         self.layer_deep = Bottleneck(num_filters[3], num_filters[3] * 3, stride=1, droprate=0.0)
         self.layer_deep1 = Bottleneck(num_filters[3], num_filters[3] * 2, stride=1, droprate=0.0)
         self.layer_deep2 = Bottleneck(num_filters[3], num_filters[3], stride=1, droprate=0.0)
 
+        # Progressive feature fusion module
         self.bf1 = BF(inplanes = num_filters[3], r=4)
         self.bf2 = BF(inplanes=num_filters[3], r=4)
         self.bf3 = BF(inplanes=num_filters[3], r=4)
