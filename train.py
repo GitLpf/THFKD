@@ -161,10 +161,9 @@ wd = args.wd
 lr = args.lr
 cnn_optimizer = torch.optim.SGD(trainable_parameters.parameters(), lr=args.lr,
                                 momentum=0.9, nesterov=True, weight_decay=wd)
-# 指定要创建的文件夹名称
+
 folder_name = './checkpoints_teacher_baseline'
 
-# 使用os模块中的makedirs()函数创建文件夹
 if not os.path.exists(folder_name):
     os.makedirs(folder_name)
 # test
@@ -258,13 +257,5 @@ if __name__ == '__main__':
                 })
         print(row)
         logger.writerow(row)
-# # 指定要创建的文件夹名称
-# folder_name = './checkpoint'
-#
-# # 使用os模块中的makedirs()函数创建文件夹
-# if not os.path.exists(folder_name):
-#     os.makedirs(folder_name)
-# torch.save(cnn.state_dict(), 'checkpoints_baseline/' + test_id + '.pt')
-logger.close()
 
 
