@@ -192,10 +192,10 @@ wd = args.wd
 lr = args.lr
 cnn_optimizer = torch.optim.SGD(cnn.parameters(), lr=args.lr,
                                 momentum=0.9, nesterov=True, weight_decay=args.wd)
-# 指定要创建的文件夹名称
+
 folder_name = './checkpoints_ReviewKD'
 
-# 使用os模块中的makedirs()函数创建文件夹
+
 if not os.path.exists(folder_name):
     os.makedirs(folder_name)
 
@@ -236,52 +236,33 @@ def test(loader):
         bf_1 = torch.max(bf1.data, 1)[1]
         bf_2 = torch.max(bf2.data, 1)[1]
         bf_3 = torch.max(bf3.data, 1)[1]
-        # bf_4 = torch.max(bf4.data, 1)[1]
         bf_e = (bf1 + bf2 +bf3) // 4
         bf_e = torch.max(bf_e.data, 1)[1]
         stu_1 = torch.max(pred[:, :, 1].data, 1)[1]
         stu_0 = torch.max(pred[:, :, 0].data, 1)[1]
         stu_2 = torch.max(pred[:, :, 2].data, 1)[1]
         stu_3 = torch.max(pred[:, :, 3].data, 1)[1]
-        # stu_4 = torch.max(pred[:, :, 4].data, 1)[1]
-        # xm_e = torch.cat([x_m1,x_m2], dim=2)
-        # xm_e = torch.max(torch.mean(xm_e, dim=2).data, 1)[1]
-        # x_m1 = torch.max(torch.mean(x_m1, dim=2).data, 1)[1]
-        # x_m2 = torch.max(torch.mean(x_m2, dim=2).data, 1)[1]
-        # xstu = torch.max(x_stu.data, 1)[1]
-        # x_stu = x_stu.unsqueeze(-1)
-        # pred = torch.cat([pred, x_stu], -1)
         pred = torch.mean(pred, dim=2)
         pred = torch.max(pred.data, 1)[1]
         total += labels.size(0)
         correct += (pred == labels).sum().item()
-        # correct_xm1 += (x_m1 == labels).sum().item()
-        # correct_xm2 += (x_m2 == labels).sum().item()
         correct_stu0 += (stu_0 == labels.data).sum().item()
         correct_stu1 += (stu_1 == labels.data).sum().item()
         correct_stu2 += (stu_2 == labels.data).sum().item()
         correct_stu3 += (stu_3 == labels.data).sum().item()
-        # correct_stu4 += (stu_4 == labels.data).sum().item()
         correct_bf1 += (bf_1 == labels.data).sum().item()
         correct_bf2 += (bf_2 == labels.data).sum().item()
         correct_bf3 += (bf_3 == labels.data).sum().item()
-        # correct_bf4 += (bf_4 == labels.data).sum().item()
-        # correct_xm_e += (xm_e == labels.data).sum().item()
         correct_bf_e += (bf_e == labels.data).sum().item()
     stu1_acc = correct_stu1 / total
     stu0_acc = correct_stu0 / total
     stu2_acc = correct_stu2 / total
     stu3_acc = correct_stu3 / total
-    # stu4_acc = correct_stu4 / total
     val_acc = correct / total
-    # xm1_acc = correct_xm1 / total
-    # xm2_acc = correct_xm2 / total
     bf1_acc = correct_bf1 / total
     bf2_acc = correct_bf2 / total
     bf3_acc = correct_bf3 / total
-    # bf4_acc = correct_bf4 / total
     bfe_acc = correct_bf_e / total
-    # xme_acc = correct_xm_e / total
 
     cnn.train()
     return val_acc, stu1_acc, stu0_acc, stu2_acc, stu3_acc, bf1_acc, bf2_acc, bf3_acc,bfe_acc
@@ -327,31 +308,23 @@ if __name__ == '__main__':
             #     teacher_1 = teacher_1.unsqueeze(-1)
             #     teacher_p = torch.cat([teacher_p, teacher_1], -1)
 
-            # 使用模型进行前向传播，返回输出、交互信息和学生输出。
-            pred, bf1, bf2, bf3 = cnn(images, is_feat=True, preact=False)  # 用学生模型预测训练数据
+            pred, bf1, bf2, bf3 = cnn(images, is_feat=True, preact=False) 
 
             # energy = torch.bmm(proj_q, proj_k.permute(0, 2, 1))
             # # attention = F.softmax(energy, dim=-1)
             # # x_m = torch.bmm(teacher_p, attention.permute(0, 2, 1))
 
-            loss_true = 0  # 初始化分支模型的损失值
-            loss_group = 0  # 初始化分组模型的损失值
+            loss_true = 0 
+            loss_group = 0 
             loss_KD = 0
             loss_bf = 0
             loss_predE = 0
-            # 遍历从1到3的三个“peer”分支。
             for i in range(args.num_branches):
-                loss_true += criterion(pred[:, :, i], labels)  # 计算当前分支的交叉熵损失。
+                loss_true += criterion(pred[:, :, i], labels)  
                 loss_KD += criterion_T(pred[:, :, i], t_pred)
                 loss_predE += criterion_T(pred[:, :, i], torch.mean(pred, dim=2))
                 loss_group += criterion_T(pred[:, :, i], bf3)
-            # loss_group += criterion_T(bf1, bf2)
-            # loss_KD += criterion_T(pred[:, :, 2], torch.mean(pred, dim=2))~
             loss_bf = criterion(bf1, labels) + criterion(bf2, labels) + criterion(bf3, labels)
-            # loss_KD = criterion_T(bf1, t_pred) + criterion_T(bf2, t_pred)
-            # loss_KD = criterion_T(bf1, t_pred) + criterion_T(bf2, t_pred)
-            # ensemble = torch.cat([pred, x_m], -1)
-            # 计算总损失，包括交叉熵损失、学生和教师输出之间的知识蒸馏损失、组内知识蒸馏损失和组间知识蒸馏损失。
             loss = loss_true + args.alpha * consistency_weight * (
               loss_KD + loss_group +loss_predE)
 
@@ -389,19 +362,14 @@ if __name__ == '__main__':
                 'train_acc': '%.2f'%(accuracy*100),
                 'test_acc': '%.2f'%(test_acc*100),
                 'best_acc': '%.2f'%(best_acc*100),
-                # 'xm1_acc': '%.2f' % (xm1_acc * 100),
-                # 'xm2_acc': '%.2f' % (xm2_acc * 100),
-                # 'xme_acc': '%.2f' % (xme_acc * 100),
                 'bfe_acc': '%.2f' % (bfe_acc * 100),
                 'stu0_acc': '%.2f' % (stu0_acc * 100),
                 'stu1_acc': '%.2f' % (stu1_acc * 100),
                 'stu2_acc': '%.2f' % (stu2_acc * 100),
                 'stu3_acc': '%.2f' % (stu3_acc * 100),
-                # 'stu4_acc': '%.2f' % (stu4_acc * 100),
                 'bf1_acc': '%.2f' % (bf1_acc * 100),
                 'bf2_acc': '%.2f' % (bf2_acc * 100),
                 'bf3_acc': '%.2f' % (bf3_acc * 100),
-                # 'bf4_acc': '%.2f' % (bf4_acc * 100),
                 'lr': '%.5f'%(lr),
                 'loss': '%.5f'%(sum(loss_avg.values())),
                 'params': '%.5f'%(num_params_stu),
@@ -415,14 +383,5 @@ if __name__ == '__main__':
         print(row)
         logger.writerow(row)
 
-
-# # 指定要创建的文件夹名称
-# folder_name = './checkpoint'
-#
-# # 使用os模块中的makedirs()函数创建文件夹
-# if not os.path.exists(folder_name):
-#     os.makedirs(folder_name)
-# torch.save(cnn.state_dict(), 'checkpoints_baseline/' + test_id + '.pt')
-logger.close()
 
 
