@@ -325,8 +325,8 @@ if __name__ == '__main__':
                 loss_predE += criterion_T(pred[:, :, i], torch.mean(pred, dim=2))
                 loss_group += criterion_T(pred[:, :, i], bf3)
             loss_bf = criterion(bf1, labels) + criterion(bf2, labels) + criterion(bf3, labels)
-            loss = loss_true + args.alpha * consistency_weight * (
-              loss_KD + loss_group +loss_predE)
+            # loss = Lce + w(i)*(Ltg + Lcl)
+            loss = loss_true + args.alpha * consistency_weight * (loss_KD + loss_group +loss_predE)
 
 
             losses['loss_true'] = loss_true
