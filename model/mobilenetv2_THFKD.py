@@ -173,12 +173,12 @@ class MobileNetV2(nn.Module):
         self.avgpool = nn.AvgPool2d(H, ceil_mode=True)
         self._initialize_weights()
         print(T, width_mult)
-
+        # Auxiliary blocks
         self.layer_deep = Bottleneck1(160, 160 * 3, stride=1, droprate=0.0)  # droprate=0.0
         self.layer_deep1 = Bottleneck1(160, 160 * 2, stride=1, droprate=0.0)
         self.layer_deep2 = Bottleneck1(160, 160 , stride=1, droprate=0.0)
-        # self.layer_deep = Bottleneck1(960, 1088, stride=1, groups=4, is_last=False)  #  droprate=0.0
-        # self.layer_deep1 = Bottleneck1(960, 544, stride=1, groups=4, is_last=False)
+
+        # Progressive feature fusion module 
         self.bf1 = BF(inplanes=self.last_channel, r=4)
         self.bf2 = BF(inplanes=self.last_channel, r=4)
         self.bf3 = BF(inplanes=self.last_channel, r=4)
