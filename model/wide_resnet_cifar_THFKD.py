@@ -121,9 +121,12 @@ class WideResNet(nn.Module):
             setattr(self, 'block3_' + str(i), NetworkBlock(n, nChannels[2], nChannels[3], block, 2, dropRate))
             setattr(self, 'classifier3_' + str(i), nn.Linear(nChannels[3], num_classes))
 
+        # Auxiliary blocks
         self.layer_deep = Bottleneck(nChannels[3], nChannels[3] * 3, stride=1, droprate=0.0)
         self.layer_deep1 = Bottleneck(nChannels[3], nChannels[3] * 2, stride=1, droprate=0.0)
         self.layer_deep2 = Bottleneck(nChannels[3], nChannels[3], stride=1, droprate=0.0)
+
+        # Progressive feature fusion module
         self.bf = BF(inplanes=nChannels[3], r=4)
         self.bf2 = BF(inplanes=nChannels[3], r=4)
         self.bf3 = BF(inplanes=nChannels[3], r=4)
